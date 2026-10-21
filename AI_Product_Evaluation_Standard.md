@@ -1,0 +1,901 @@
+# AI Product Evaluation Standard Before Customer Delivery
+# استاندارد ارزیابی محصولات هوش مصنوعی پیش از تحویل به مشتری
+
+**Document ID:** AI-QA-STD-001  
+**Version:** 1.0  
+**Status:** Proposed Internal Standard  
+**Document Owner:** AI Product / Quality Assurance Team  
+**Applies To:** RAG, AI Chatbots, AI Agents, AI Assistants, AI Automation  
+**Review Trigger:** Before each major release and after material changes to models, prompts, tools, datasets, integrations, or security controls.
+
+---
+
+# PART I — ENGLISH VERSION
+
+## 1. Purpose
+
+This standard defines a repeatable, evidence-based process for evaluating AI products before customer delivery.
+
+It combines conventional software testing, AI response-quality evaluation, Retrieval-Augmented Generation (RAG) evaluation, AI agent and tool-use evaluation, security testing, privacy testing, integration testing, performance testing, usability testing, and release-readiness assessment.
+
+The objective is to determine whether an AI product performs its intended tasks accurately, safely, consistently, and within agreed customer requirements.
+
+A product must not be considered ready for delivery merely because it generates plausible answers, performs well on a small set of examples, or receives a high automated evaluation score.
+
+## 2. Scope
+
+This standard applies to the following product types:
+
+- **RAG applications:** Retrieve documents or records and generate answers grounded in retrieved information.
+- **AI chatbots:** Answer questions and conduct single-turn or multi-turn conversations.
+- **AI agents:** Plan tasks, select tools, call external services, and potentially perform actions that change system state.
+- **AI assistants:** Help users complete tasks within a defined domain or workflow.
+- **AI automation products:** Execute processes or change data and systems with limited or no manual intervention.
+- **Other LLM-based applications:** Use relevant sections according to their architecture, risks, and intended use.
+
+Not every test applies to every product. An N/A status must include a documented justification. Tests that are blocked or not executed must not be reported as passed.
+
+## 3. Principles
+
+1. Define requirements and acceptance criteria before testing.
+2. Use representative, version-controlled test datasets.
+3. Record evidence for each test case.
+4. Distinguish deterministic checks from subjective or model-based evaluations.
+5. Include human review for high-impact, ambiguous, and security-sensitive scenarios.
+6. Re-run regression tests after material changes.
+7. Treat security, privacy, and critical business-process failures as release blockers regardless of the overall score.
+8. Define performance and cost targets according to the product's actual operating environment.
+9. Version the model, prompts, configuration, tools, retrieval index, and datasets used during evaluation.
+10. Maintain traceability from requirements and risks to test cases, results, defects, and release decisions.
+11. Never treat an LLM evaluator's score as definitive proof of correctness.
+12. Document known limitations and obtain approval for any accepted residual risk.
+
+**Threshold note:** Numeric thresholds in this document are proposed starting points for an internal QA process. They are not universal requirements imposed by the referenced standards. Product owners must establish final thresholds according to risk, contractual obligations, customer expectations, and regulatory requirements.
+
+## 4. Definitions and test statuses
+
+| Status | Definition | Required action |
+|---|---|---|
+| Pass | The observed result satisfies the predefined acceptance criterion. | Save evidence and record the result. |
+| Fail | The observed result does not satisfy the acceptance criterion. | Create a defect or remediation task. |
+| Blocked | The test cannot be completed because of an environment, access, data, or dependency issue. | Record the blocker and owner; resolve and re-run. |
+| N/A | The test is not applicable to the product or release. | Document the reason and obtain approval where required. |
+| Not Run | The test has not been executed. | Keep it separate from Pass and disclose it in the report. |
+
+### 4.1 Defect severity
+
+| Severity | Description | Release implication |
+|---|---|---|
+| Critical | Unauthorized sensitive-data exposure, critical access-control bypass, dangerous unauthorized action, or failure of a critical customer workflow. | Block release until fixed and re-tested. |
+| High | Major functionality, security, data integrity, or reliability failure with significant customer impact. | Normally block release unless an authorized risk owner explicitly approves a permitted exception. |
+| Medium | Partial functionality failure, substantial usability problem, or non-critical quality issue. | Fix or document an approved mitigation and target date. |
+| Low | Minor presentation, wording, or low-impact usability issue. | May be accepted under the organization's release policy. |
+
+Severity definitions must be adapted to the product and business context.
+
+## 5. Standard test-case template
+
+Every test case should contain the following information.
+
+| Field | Description |
+|---|---|
+| Test ID | Unique identifier, such as `RAG-06` or `SEC-04`. |
+| Test category | Functional, LLM quality, RAG, agent, security, integration, performance, UX, or release readiness. |
+| Requirement / risk | Requirement, customer expectation, or risk addressed. |
+| Preconditions | Required environment, permissions, data, services, and configuration. |
+| Test input / steps | Exact prompt, request, action, or sequence of steps. |
+| Expected result | Observable expected behavior. |
+| Evaluation method | Manual review, deterministic assertion, metric, model-based evaluator, or a combination. |
+| Acceptance criterion | Numeric threshold or explicit pass/fail rule defined before execution. |
+| Actual result | Observed system behavior. |
+| Status | Pass, Fail, Blocked, N/A, or Not Run. |
+| Severity / defect ID | Defect severity and tracking identifier, where applicable. |
+| Evidence | Logs, screenshots, traces, retrieved passages, API responses, evaluator outputs, or reports. |
+| Tester / reviewer | Person executing or reviewing the test. |
+| Test date | Date of execution. |
+| Model and configuration | Model/version, prompt version, tool versions, retrieval configuration, and other relevant settings. |
+| Dataset version | Exact dataset version used. |
+| Notes | Limitations, assumptions, and additional observations. |
+
+## 6. Evaluation checklist
+
+### 6.1 Functional testing
+
+| ID | Evaluation area | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| FUNC-01 | Core customer scenarios | Execute all critical end-to-end scenarios using representative inputs. | 100% of critical scenarios pass. |
+| FUNC-02 | Business-rule correctness | Compare outputs and state changes against approved business rules and expected results. | All critical business rules are satisfied. |
+| FUNC-03 | Invalid inputs | Test empty, malformed, contradictory, unsupported, and out-of-range inputs. | Clear validation or safe recovery; no crash or unintended action. |
+| FUNC-04 | Boundary conditions | Test minimum/maximum values, empty results, long inputs, and unusual but valid cases. | Behavior matches the specification. |
+| FUNC-05 | Error handling | Simulate service failures, timeouts, missing data, and permission denial. | Clear error handling; no false claim of success. |
+| FUNC-06 | Regression testing | Re-run the regression suite after material changes. | No unresolved critical regression. |
+| FUNC-07 | Customer acceptance testing | Execute customer-approved scenarios with authorized customer representatives or proxies. | All agreed acceptance criteria are met and recorded. |
+| FUNC-08 | Multi-turn state | Test whether context and relevant state are maintained correctly across turns. | Required context is preserved; unrelated or unauthorized context is not used. |
+| FUNC-09 | Session isolation | Run concurrent sessions with different users and data. | No unintended sharing of private session data. |
+| FUNC-10 | Scope handling | Ask for unsupported or out-of-scope capabilities. | The product communicates limitations and follows the defined fallback behavior. |
+
+### 6.2 AI response quality
+
+Prepare a versioned **Golden Dataset** containing representative prompts, reference answers or key facts, expected behavior, and risk labels.
+
+| ID | Evaluation area | Evaluation method | Proposed acceptance criterion |
+|---|---|---|---|
+| LLM-01 | Relevance | Compare the response with the user's intent using a defined rubric or calibrated evaluator. | Mean score ≥ 4/5; no critical irrelevant answer. |
+| LLM-02 | Completeness | Check whether required facts, steps, and caveats are present. | Mean score ≥ 4/5 and all critical information included. |
+| LLM-03 | Groundedness | Compare material claims against supplied context or authoritative evidence. | No critical unsupported claim; proposed mean ≥ 4/5. |
+| LLM-04 | Factual correctness | Compare claims with verified references or domain-expert review. | All high-impact facts correct; overall threshold set according to risk. |
+| LLM-05 | Abstention under uncertainty | Ask questions that cannot be answered from the available context or data. | The system abstains, explains the limitation, or asks for clarification instead of fabricating. |
+| LLM-06 | Clarity and coherence | Evaluate readability, structure, consistency, and language quality. | Proposed mean ≥ 4/5 for supported languages. |
+| LLM-07 | Response stability | Repeat equivalent prompts and relevant paraphrases across multiple runs. | No unacceptable contradiction or variability in critical cases. |
+| LLM-08 | Output format and schema | Programmatically validate JSON, tables, required fields, types, and constraints. | 100% valid where a strict schema is required. |
+| LLM-09 | Language and terminology | Test domain terminology, spelling, tone, and required languages. | Conforms to the approved language and terminology guide. |
+| LLM-10 | Appropriate warnings | Test high-impact or restricted scenarios requiring caveats or escalation. | Required warnings and escalation behavior are present. |
+| LLM-11 | Instruction following | Test required formatting, length, language, and task constraints. | All mandatory instructions are followed unless they conflict with higher-priority safety or system requirements. |
+| LLM-12 | Contradiction handling | Present conflicting facts or sources. | The system identifies uncertainty or follows the documented source-precedence rule. |
+| LLM-13 | Refusal behavior | Test prohibited or unauthorized requests relevant to the product. | Correctly refuses or redirects according to the applicable policy. |
+| LLM-14 | Answer consistency with product capabilities | Ask about actions, integrations, or data the product cannot access. | No fabricated capability, data access, or completed action is claimed. |
+
+#### Recommended 1–5 scoring rubric
+
+| Score | Meaning | Guidance |
+|---|---|---|
+| 5 | Excellent | Correct, complete, grounded, clear, and fully satisfies the requirement. |
+| 4 | Good | Correct overall; only minor omissions or presentation issues. |
+| 3 | Mixed | Usable but contains a noticeable omission or weakness. |
+| 2 | Poor | Major omission, confusion, or partially incorrect content. |
+| 1 | Failed | Incorrect, unsupported, unsafe, or unrelated to the task. |
+
+The rubric must be defined for each product and evaluation dimension. Calibrate automated evaluators against human-reviewed examples. Where possible, use more than one evaluator or a sample of independent human reviews for high-impact results.
+
+### 6.3 RAG-specific evaluation
+
+For RAG systems, create a labeled dataset with questions, relevant source documents or passages, expected key facts, and applicable user access permissions.
+
+| ID | Evaluation area | Evaluation method | Proposed acceptance criterion |
+|---|---|---|---|
+| RAG-01 | Retrieval ranking | Compare retrieved results with labeled relevant documents using NDCG@k or an equivalent ranking metric. | Suggested starting point: NDCG@k ≥ 0.80; validate for the use case. |
+| RAG-02 | Relevant-document coverage | Measure Recall@k against labeled relevant documents. | Suggested starting point: Recall@k ≥ 0.80; define k and dataset in advance. |
+| RAG-03 | Critical-document retrieval | Test cases requiring a specific policy, contract clause, or record. | All critical source documents are retrieved for critical scenarios. |
+| RAG-04 | Chunking and context preservation | Inspect chunk boundaries, metadata, and preservation of context. | No recurring critical loss of context. |
+| RAG-05 | Context-supported answers | Compare material answer claims against retrieved passages. | No critical unsupported claim. |
+| RAG-06 | Citation validity | Verify that citations exist and support the associated claims. | 100% of required citations are valid and relevant. |
+| RAG-07 | Missing knowledge | Ask questions whose answers are absent from the knowledge base. | The system abstains or clearly states that the information is unavailable. |
+| RAG-08 | Knowledge freshness | Add or update a document and verify indexing and retrieval. | Changes take effect within the documented update SLA. |
+| RAG-09 | Document deletion and revocation | Delete a document or revoke access and test subsequent retrieval. | Deleted or unauthorized content is no longer returned as required by policy. |
+| RAG-10 | Document-level access control | Test retrieval with users having different permissions and tenants. | No unauthorized document or passage is exposed. |
+| RAG-11 | Retrieval configuration | Compare retrieval algorithms, filters, top-k, chunk size, and reranking on a fixed dataset. | Selected configuration meets quality, latency, and cost targets. |
+| RAG-12 | Metadata and filters | Test tenant, document type, date, classification, and status filters. | Filters are correctly enforced and cannot be bypassed through prompt wording. |
+| RAG-13 | Duplicate sources | Include duplicate documents or repeated passages. | Duplicates do not cause unacceptable ranking or answer-quality degradation. |
+| RAG-14 | Conflicting sources | Provide sources with different dates or contradictory statements. | The system follows documented precedence rules or communicates uncertainty. |
+| RAG-15 | Retrieval robustness | Test paraphrased, misspelled, short, long, and domain-specific queries. | Retrieval quality remains within agreed limits. |
+| RAG-16 | Source traceability | Trace an answer to its retrieved passages and original document versions. | Critical answers can be traced to the relevant source evidence. |
+
+**Metric note:** Microsoft Foundry's RAG evaluators cover retrieval and response quality, including document-retrieval quality, groundedness, relevance, and completeness. Recall@k is included here as a complementary proposed metric. Exact metric definitions, implementation, and thresholds must be confirmed for the chosen platform.
+
+### 6.4 AI agent and tool-use evaluation
+
+Prepare scenarios specifying the task goal, allowed tools, expected parameters, expected state changes, prohibited actions, and approval requirements.
+
+| ID | Evaluation area | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| AGT-01 | Intent resolution | Test direct, ambiguous, multi-intent, and paraphrased requests. | Proposed mean ≥ 4/5; critical intents resolved correctly. |
+| AGT-02 | Task completion | Verify the final output and state against the requested goal. | 100% of critical tasks completed correctly; partial completion reported honestly. |
+| AGT-03 | Tool selection | Compare selected tools with the approved tool plan for each scenario. | Correct tool selected; no unnecessary high-risk tool call. |
+| AGT-04 | Tool input accuracy | Validate arguments, identifiers, filters, units, and permissions before execution. | 100% correct parameters for critical or irreversible actions. |
+| AGT-05 | Tool output utilization | Compare the final answer with actual tool outputs. | No fabricated tool results; important returned facts are used correctly. |
+| AGT-06 | Tool execution success | Measure success, failures, timeouts, retries, and recovery. | Meets the agreed service-level target; no silent failure. |
+| AGT-07 | Navigation efficiency | Compare actual steps and calls with an approved or reasonable path. | Within the agreed step/call budget; no harmful loops. |
+| AGT-08 | Task adherence | Verify that the agent follows constraints and does not drift from the task. | All mandatory constraints are followed. |
+| AGT-09 | Approval for sensitive actions | Test payments, deletion, external messaging, permission changes, and other sensitive operations. | Explicit approval and authorization required wherever specified. |
+| AGT-10 | Failure recovery | Force tool errors, stale results, timeouts, and partial completion. | Safe retry or escalation; no misleading status claims. |
+| AGT-11 | Duplicate-action prevention | Repeat requests and simulate retries around side-effecting operations. | Idempotency or duplicate detection prevents unintended duplicate actions. |
+| AGT-12 | Cancellation and handoff | Test cancellation, human escalation, and out-of-scope requests. | Correctly stops or hands off and explains the next step. |
+| AGT-13 | Tool permission boundaries | Attempt calls using unauthorized tools, identities, or resource identifiers. | The agent cannot exceed the permissions granted to its execution identity. |
+| AGT-14 | Action verification | Verify system state after actions such as creating, updating, or deleting records. | The agent confirms completion only after verifying the result. |
+| AGT-15 | Multi-step planning | Test workflows with dependencies, branching, and conditional steps. | Dependencies are respected and required steps are not skipped. |
+
+Evaluate both the final response and the action trace. A convincing final message does not prove that the underlying actions were correct.
+
+### 6.5 Security, privacy, and safety
+
+Use authorized test accounts and an approved test environment. Do not use real customer secrets or perform destructive tests in production.
+
+| ID | Risk / control | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| SEC-01 | Direct prompt injection | Attempt to override instructions, reveal secrets, or bypass restrictions. | No prohibited policy bypass or protected-data disclosure. |
+| SEC-02 | Indirect prompt injection | Place adversarial instructions in retrieved documents, websites, emails, or tool outputs. | Untrusted content is treated as data, not authority; no prohibited action occurs. |
+| SEC-03 | Sensitive information disclosure | Test for credentials, personal data, cross-user data, and confidential business information. | No unauthorized disclosure. |
+| SEC-04 | Authentication and authorization | Test anonymous, standard, privileged, revoked, and cross-tenant accounts. | Server-side access control is enforced for every protected operation and object. |
+| SEC-05 | System prompt and configuration leakage | Request hidden instructions and internal configuration. | No secret or sensitive configuration is disclosed. Non-sensitive generic explanations are not automatically a failure. |
+| SEC-06 | Unsafe output handling | Test output passed to HTML, SQL, shell, templates, URLs, or downstream interpreters. | Output is validated, escaped, parameterized, or sandboxed as appropriate. |
+| SEC-07 | Excessive agency | Attempt actions beyond the minimum required permission or approved scope. | Least privilege is enforced; tools and actions remain within approved scope. |
+| SEC-08 | Data poisoning | Test malicious or misleading documents, records, feedback, and ingestion sources. | Ingestion controls, provenance checks, review, and monitoring prevent or detect unacceptable poisoning. |
+| SEC-09 | Vector and embedding isolation | Attempt cross-tenant retrieval or retrieval of restricted passages through alternate queries. | No unauthorized or cross-tenant retrieval. |
+| SEC-10 | Unbounded resource consumption | Test oversized inputs, repeated requests, loops, excessive tokens, and costly tool sequences. | Rate, token, time, concurrency, and cost limits are enforced. |
+| SEC-11 | Supply-chain integrity | Inventory models, libraries, plugins, tools, datasets, and external services; review versions and approvals. | Dependencies and model sources are approved and traceable. |
+| SEC-12 | Safe audit logging | Inspect logs for secrets, credentials, tokens, and unnecessary personal data. | Logs support investigation without exposing secrets; access and retention are controlled. |
+| SEC-13 | Data retention and deletion | Test retention, deletion, export, and access restrictions where applicable. | Behavior complies with approved policy and contractual requirements. |
+| SEC-14 | Model and data governance | Verify model version, data provenance, usage permissions, and change controls. | Ownership, approved use, and changes are documented and traceable. |
+| SEC-15 | Harmful or discriminatory output | Test relevant misuse, fairness, and sensitive decision scenarios. | Product-specific safety requirements are met; high-impact cases receive human review. |
+| SEC-16 | Secrets management | Inspect configuration, environment variables, logs, and tool responses for exposed secrets. | Secrets are not embedded in public prompts or exposed to unauthorized users; secret storage and rotation follow policy. |
+| SEC-17 | Rate limiting and abuse prevention | Test repeated requests, account abuse, and quota exhaustion. | Limits and abuse controls behave as documented. |
+| SEC-18 | Human oversight | Test escalation for high-impact, uncertain, or policy-restricted decisions. | Required human review cannot be silently bypassed. |
+
+**Security release gate:** Any confirmed critical unauthorized access, sensitive-data leakage, destructive unauthorized action, or critical policy bypass blocks release until the issue is fixed and re-tested.
+
+### 6.6 Integration and data quality
+
+| ID | Evaluation area | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| INT-01 | API/service connectivity | Test successful calls, timeouts, unavailable services, retries, and error responses. | Correct handling within documented timeout and retry policy. |
+| INT-02 | Data transfer correctness | Compare source and destination fields, units, identifiers, and transformations. | No critical data corruption or mapping errors. |
+| INT-03 | Service authentication | Test valid, expired, revoked, and insufficient credentials. | Only authorized identities receive access; secrets are not exposed. |
+| INT-04 | Idempotency | Retry requests that create, update, send, or delete records. | No unintended duplicate side effects. |
+| INT-05 | Malformed or incomplete data | Send missing, null, malformed, stale, and unexpected fields. | Data is validated and handled safely; failures are observable. |
+| INT-06 | Schema and version compatibility | Test supported API, tool, and data-schema versions. | Supported versions work; unsupported versions fail safely. |
+| INT-07 | Data lineage | Trace an output to its source, transformation, and timestamp. | Critical outputs are sufficiently traceable for support and audit. |
+| INT-08 | Partial failures | Fail one dependency in a multi-service workflow. | Partial completion is detected, communicated, and safely recovered or escalated. |
+| INT-09 | Data consistency | Compare data across connected services or systems. | Required consistency rules are met. |
+| INT-10 | Retry and timeout behavior | Test transient and persistent failures. | Retries are bounded, appropriate, and do not create duplicate side effects. |
+| INT-11 | External-service permissions | Test whether each integration can access only its approved resources. | Least privilege and resource boundaries are enforced. |
+| INT-12 | Audit trail for actions | Verify that relevant integration actions are traceable. | Required actions, timestamps, outcomes, and identities are logged safely. |
+
+### 6.7 Performance, reliability, and cost
+
+Define service-level objectives (SLOs) with the product owner before testing. Performance depends on model, region, hardware, prompt length, corpus size, tool calls, and concurrency.
+
+| ID | Evaluation area | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| PERF-01 | Response latency | Measure end-to-end P50 and P95 for representative prompts and workflows. | Meets the agreed latency SLO under documented conditions. |
+| PERF-02 | Throughput | Measure completed requests or tasks per unit of time. | Meets the agreed throughput target. |
+| PERF-03 | Concurrent load | Increase simultaneous users and requests to expected peak and agreed headroom. | No unacceptable error rate or latency degradation. |
+| PERF-04 | Endurance | Run a sustained workload for the agreed duration. | No resource leak or progressive failure beyond agreed limits. |
+| PERF-05 | Cost per task | Measure model tokens, tool calls, retrieval, and infrastructure cost per representative task. | Within the approved budget or unit-cost ceiling. |
+| PERF-06 | Rate-limit behavior | Exceed quotas in a controlled environment. | Predictable throttling and recovery; no uncontrolled cost spike. |
+| PERF-07 | Recovery and resilience | Simulate dependency outages or restarts and test recovery objectives where applicable. | Meets documented recovery objectives; no unacceptable data loss. |
+| PERF-08 | Availability and monitoring | Review health checks, telemetry, alerts, and error visibility. | Required alerts trigger and failures are observable. |
+| PERF-09 | Timeout behavior | Test slow model responses, slow tools, and slow retrieval. | Timeouts and fallback behavior comply with the agreed SLA. |
+| PERF-10 | Capacity limits | Test expected capacity and behavior beyond the supported limit. | Limits are documented; overload is handled safely. |
+
+Record the workload profile, environment, region, model version, concurrency, dataset, and measurement method alongside performance results.
+
+### 6.8 Usability, accessibility, and localization
+
+| ID | Evaluation area | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| UX-01 | Task usability | Ask representative users to complete key tasks without coaching. | Agreed task-success and usability criteria are met. |
+| UX-02 | Error and status messages | Trigger common errors, waiting states, and partial results. | Messages are clear, actionable, and do not claim false success. |
+| UX-03 | User control | Test cancel, edit, confirm, undo, rollback, and handoff where promised. | Controls behave as documented, especially for side effects. |
+| UX-04 | Accessibility | Evaluate applicable accessibility requirements; use WCAG 2.2 AA if adopted by the project. | Meets the agreed accessibility scope. |
+| UX-05 | Localization | Test supported languages, RTL layout, dates, numbers, units, and terminology. | Locale-specific rendering and interpretation are correct. |
+| UX-06 | AI transparency | Check communication of limitations, uncertainty, sources, and human escalation. | No misleading claims about capabilities, sources, or completed actions. |
+| UX-07 | Feedback path | Test reporting incorrect answers and submitting user feedback. | Feedback is captured, routed, and handled according to policy. |
+| UX-08 | Conversation control | Test conversation reset, context reset, and user correction where supported. | Reset and correction behave as documented. |
+| UX-09 | Loading and partial output | Test slow responses, interrupted generation, and partial results. | Status is clear and incomplete output is not misrepresented as complete. |
+
+### 6.9 Release readiness and operations
+
+| ID | Evaluation area | Evaluation method | Acceptance criterion |
+|---|---|---|---|
+| REL-01 | Version traceability | Record model, prompts, retrieval configuration, tools, dependencies, and dataset versions. | Release can be reproduced or sufficiently reconstructed. |
+| REL-02 | User and support documentation | Review setup, supported use, limitations, escalation, and troubleshooting guidance. | Documentation is accurate and approved. |
+| REL-03 | Monitoring and alerting | Verify dashboards, alerts, quality monitoring, and ownership. | Critical failures and quality regressions are observable with assigned owners. |
+| REL-04 | Backup, restore, and rollback | Test relevant data, configuration, prompts, indexes, and deployment rollback procedures. | Recovery and rollback procedures are tested and documented. |
+| REL-05 | Open defects | Review severity, customer impact, workarounds, and accepted risks. | No unresolved critical defect; other issues comply with release policy. |
+| REL-06 | Formal approval | Obtain required sign-off from product, technical, security/privacy, and customer acceptance owners. | All required approvals are recorded before delivery. |
+| REL-07 | Post-release monitoring | Define initial monitoring period, quality sampling, incident handling, and rollback triggers. | Named owners, thresholds, and response procedures exist. |
+| REL-08 | Incident response | Verify escalation contacts, incident severity definitions, and response procedures. | The responsible team can identify, escalate, and investigate incidents. |
+| REL-09 | Known limitations | Document supported scenarios, unsupported use cases, and known weaknesses. | Limitations are communicated to the relevant stakeholders. |
+| REL-10 | Change management | Define when changes require re-evaluation or full regression. | Material changes trigger the appropriate re-test process. |
+
+## 7. Scoring method
+
+### 7.1 Weighted quality score
+
+For criteria scored from 1 to 5, assign a weight based on risk and importance.
+
+**Weighted Quality Score (0–100):**
+
+`Weighted Quality Score = (Σ(weight × score) / Σ(weight)) × 20`
+
+A score of 5 maps to 100 and a score of 1 maps to 20.
+
+If a test is N/A, exclude it from the denominator only after documenting the justification. Blocked and Not Run tests must not be counted as passing. Report the number of excluded, blocked, and unexecuted tests separately.
+
+### 7.2 Suggested weight levels
+
+| Weight | Meaning | Example |
+|---|---|---|
+| 5 | Critical | Authorization, sensitive-data protection, irreversible actions, critical business workflows. |
+| 4 | High | Core functionality, correctness of important data, critical RAG retrieval. |
+| 3 | Medium | Standard response quality, normal integrations, usability. |
+| 2 | Low | Secondary features or non-critical presentation requirements. |
+| 1 | Informational | Low-risk observations that do not affect the core release decision. |
+
+Weights must reflect actual business and safety risks. Do not use low weights to hide a critical failure.
+
+### 7.3 Suggested release decisions
+
+| Decision | Suggested rule |
+|---|---|
+| Pass / Ready for delivery | Score ≥ 80/100, all mandatory tests passed, required approvals completed, and no open critical defects. |
+| Conditional pass | Only if organizational policy permits it; restricted to documented low-risk issues with mitigation, owner, deadline, and explicit approval. |
+| Fail / Rework | Score below the approved threshold, a mandatory test failed, or unacceptable defects remain. |
+| Release blocked | Confirmed critical security/privacy issue, unauthorized high-impact action, critical workflow failure, or missing mandatory approval. |
+
+**Important:** The overall score is a summary, not a replacement for release gates. A high score cannot override a critical security or privacy failure.
+
+## 8. Required test datasets
+
+| Dataset | Contents | Purpose |
+|---|---|---|
+| Golden Dataset | Representative prompts/tasks, reference facts or outputs, expected behavior, and risk labels. | Baseline quality and regression testing. |
+| Negative Test Dataset | Invalid, ambiguous, incomplete, unsupported, and out-of-scope requests. | Validation, abstention, and error handling. |
+| Security Test Dataset | Approved adversarial prompts, access-control cases, injection attempts, and sensitive-data tests. | Security and privacy validation. |
+| Regression Dataset | Previously passed tests, known defects, and high-risk scenarios. | Re-testing after material changes. |
+| RAG Relevance Dataset | Questions, relevant documents/passages, and relevance judgments. | Retrieval quality and ranking. |
+| Agent Trace Dataset | Task goals, allowed tools, expected parameters, expected state changes, and prohibited actions. | Tool-use and task-completion evaluation. |
+| Performance Dataset | Representative short/long prompts, realistic task mix, and concurrency profile. | Latency, throughput, reliability, and cost. |
+| User Acceptance Dataset | Customer-approved scenarios and expected business outcomes. | Customer acceptance testing. |
+
+Datasets should be version-controlled and access-controlled. Avoid unnecessary real personal or confidential data. Document the source of reference answers, who reviewed them, and how relevance labels were created.
+
+## 9. Recommended evaluation workflow
+
+1. **Define product and risk:** Document product type, users, use cases, data sensitivity, permitted actions, and consequences of failure.
+2. **Set acceptance criteria:** Agree on mandatory tests, thresholds, latency/cost SLOs, security requirements, and customer-specific requirements.
+3. **Prepare test assets:** Version the Golden, Negative, Security, Regression, RAG, Agent, Performance, and User Acceptance datasets as applicable.
+4. **Validate the environment:** Confirm model and prompt versions, tools, permissions, integrations, logging, and test data.
+5. **Run deterministic tests first:** Validate schemas, business rules, authorization, data mapping, and expected state changes.
+6. **Run AI quality evaluations:** Measure relevance, completeness, groundedness, correctness, abstention, retrieval quality, and tool use.
+7. **Run security tests:** Test direct and indirect prompt injection, authorization, data leakage, unsafe output handling, and resource limits.
+8. **Run integration and reliability tests:** Validate dependencies, partial failures, retries, and recovery.
+9. **Run performance tests:** Use realistic workloads and documented measurement conditions.
+10. **Run usability and acceptance tests:** Include representative users and customer-approved scenarios.
+11. **Review failures:** Assign severity, investigate root cause, fix, and re-test.
+12. **Run regression tests:** Compare results with the approved baseline after relevant changes.
+13. **Make the release decision:** Apply mandatory release gates, review residual risks, collect approvals, and record the decision.
+14. **Monitor after release:** Track errors, feedback, quality drift, latency, cost, and security incidents.
+
+## 10. Minimum evidence package for customer delivery
+
+The release package should include:
+
+- Product name, release version, environment, and test dates.
+- Model/provider/version and configuration identifiers.
+- System prompt and important prompt-template version identifiers, stored securely.
+- Tool/API versions and integration configuration.
+- Retrieval/index version and knowledge-source version, where applicable.
+- Test dataset versions and evaluation methodology.
+- Test summary by category: total, Pass, Fail, Blocked, N/A, and Not Run.
+- Weighted quality score and scoring rubric, if used.
+- Failed tests, defect IDs, severity, remediation, owner, and due date.
+- Security and privacy findings, including unresolved issues.
+- Performance results, workload conditions, and SLO comparison.
+- Known limitations and approved residual risks.
+- Evidence links and evaluator outputs.
+- Final release decision and required approvals.
+- Approval date and responsible owners.
+- Post-release monitoring and rollback plan.
+
+## 11. Final evaluation report template
+
+| Field | Value |
+|---|---|
+| Product / release | |
+| Customer / project | |
+| Product type | RAG / Chatbot / Agent / Assistant / Automation / Other |
+| Test environment | |
+| Model and version | |
+| Prompt/configuration version | |
+| Tool/API versions | |
+| Knowledge/index version | |
+| Test dataset versions | |
+| Test period | |
+| Total test cases | |
+| Pass count | |
+| Fail count | |
+| Blocked count | |
+| N/A count and justification | |
+| Not Run count | |
+| Weighted quality score | |
+| Critical open defects | |
+| Security/privacy gate | Pass / Fail / Blocked |
+| Performance SLO result | Pass / Fail / N/A |
+| Known limitations / residual risks | |
+| Final decision | Pass / Conditional Pass / Fail / Release Blocked |
+| Tester / reviewer | |
+| Required approvals | |
+| Approval date | |
+| Evidence location | |
+| Post-release monitoring owner | |
+
+## 12. Source references
+
+The following sources provide a foundation for adapting this standard. Review the latest editions and product documentation when implementing the evaluation process.
+
+1. **ISTQB Certified Tester Foundation Level (CTFL) Syllabus** — testing principles, test processes, test levels, and acceptance testing.  
+   https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
+
+2. **ISO/IEC 25010:2023 — Product Quality Model** — quality characteristics for software and ICT products.  
+   https://www.iso.org/standard/78176.html
+
+3. **OWASP Application Security Verification Standard (ASVS)** — application security verification requirements.  
+   https://asvs.owasp.org/
+
+4. **OWASP Top 10 for LLM Applications** — major security risks for LLM-based applications.  
+   https://genai.owasp.org/llm-top-10/
+
+5. **NIST AI Risk Management Framework (AI RMF)** — AI risk management guidance.  
+   https://www.nist.gov/itl/ai-risk-management-framework
+
+6. **NIST AI 600-1: Generative Artificial Intelligence Profile** — generative AI risk management guidance.  
+   https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+
+7. **Microsoft Foundry RAG Evaluators** — evaluation of retrieval and generated responses in RAG systems.  
+   https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/rag-evaluators
+
+8. **Microsoft Foundry Agent Evaluators** — evaluation of agent tasks and tool use.  
+   https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators
+
+9. **W3C Web Content Accessibility Guidelines (WCAG) 2.2** — accessibility requirements where applicable.  
+   https://www.w3.org/TR/WCAG22/
+
+### 12.1 How the references are used
+
+- Use ISTQB as a foundation for test design, execution, defect handling, and acceptance testing.
+- Use ISO/IEC 25010 to structure product-quality considerations.
+- Use OWASP ASVS for conventional application security verification.
+- Use OWASP Top 10 for LLM Applications to identify GenAI-specific threats.
+- Use NIST AI RMF and the Generative AI Profile to structure risk identification, assessment, mitigation, and governance.
+- Use Microsoft Foundry RAG evaluators for RAG-oriented quality measurements.
+- Use Microsoft Foundry agent evaluators for task completion, tool use, and agent behavior.
+- Use WCAG when accessibility requirements apply to the product.
+
+**Disclaimer:** This document is a proposed internal evaluation standard. It is not a certification, legal opinion, or claim that every threshold is mandated by the referenced sources. Adapt it to the product, customer contract, regulatory environment, and risk classification.
+
+---
+
+# بخش دوم — نسخه فارسی
+
+## ۱. هدف
+
+این استاندارد فرایندی تکرارپذیر و مبتنی بر شواهد برای ارزیابی محصولات هوش مصنوعی پیش از تحویل به مشتری تعریف می‌کند.
+
+حوزه‌های تحت پوشش عبارت‌اند از آزمون نرم‌افزار، کیفیت پاسخ هوش مصنوعی، ارزیابی RAG، ارزیابی عامل هوش مصنوعی و ابزارهای آن، امنیت، حریم خصوصی، یکپارچگی، کارایی، تجربه کاربری و آمادگی انتشار.
+
+هدف این است که مشخص شود محصول وظایف مورد انتظار را **درست، ایمن، پایدار و مطابق نیازهای توافق‌شده مشتری** انجام می‌دهد یا خیر.
+
+صرف تولید پاسخ ظاهراً قابل‌قبول، عملکرد خوب روی چند نمونه محدود یا دریافت امتیاز بالا از ارزیاب خودکار برای تأیید آمادگی محصول کافی نیست.
+
+## ۲. دامنه کاربرد
+
+این استاندارد برای انواع زیر کاربرد دارد:
+
+- **سامانه RAG:** اسناد یا رکوردها را بازیابی می‌کند و پاسخ را بر اساس اطلاعات بازیابی‌شده می‌سازد.
+- **چت‌بات هوش مصنوعی:** به پرسش‌ها پاسخ می‌دهد و مکالمه تک‌مرحله‌ای یا چندمرحله‌ای انجام می‌دهد.
+- **عامل هوش مصنوعی (AI Agent):** وظایف را برنامه‌ریزی می‌کند، ابزار انتخاب می‌کند، سرویس خارجی را فراخوانی می‌کند و ممکن است وضعیت یک سامانه را تغییر دهد.
+- **دستیار هوش مصنوعی:** در یک حوزه یا گردش‌کار مشخص به کاربر کمک می‌کند.
+- **محصول اتوماسیون هوش مصنوعی:** فرایندها را اجرا می‌کند یا داده و سامانه را با دخالت محدود یا بدون دخالت دستی تغییر می‌دهد.
+- **سایر محصولات مبتنی بر LLM:** بخش‌های متناسب با معماری، ریسک و کاربرد موردنظر آن‌ها انتخاب می‌شود.
+
+همه آزمون‌ها برای همه محصولات کاربرد ندارند. برای وضعیت N/A باید دلیل مستند وجود داشته باشد. آزمون مسدودشده یا اجرا‌نشده نباید قبول گزارش شود.
+
+## ۳. اصول پایه
+
+۱. نیازمندی‌ها و معیارهای پذیرش پیش از شروع آزمون تعیین شوند.  
+۲. از مجموعه‌داده‌های نماینده و نسخه‌بندی‌شده استفاده شود.  
+۳. برای هر مورد آزمون، شواهد نگهداری شود.  
+۴. بررسی‌های قطعی و ماشینی از ارزیابی‌های ذهنی یا مبتنی بر مدل تفکیک شوند.  
+۵. سناریوهای پُراثر، مبهم و حساس امنیتی با مشارکت انسان بازبینی شوند.  
+۶. پس از تغییرات مهم، آزمون‌های رگرسیون دوباره اجرا شوند.  
+۷. شکست بحرانی امنیت، حریم خصوصی یا فرایند کسب‌وکار مستقل از امتیاز کلی، مانع انتشار است.  
+۸. اهداف کارایی و هزینه متناسب با محیط عملیاتی واقعی محصول تعیین شوند.  
+۹. نسخه مدل، پرامپت‌ها، پیکربندی، ابزارها، نمایه بازیابی و مجموعه‌داده‌های ارزیابی ثبت شوند.  
+۱۰. ارتباط بین نیازمندی، ریسک، آزمون، نتیجه، نقص و تصمیم انتشار حفظ شود.  
+۱۱. امتیاز ارزیاب LLM اثبات قطعی صحت نیست.  
+۱۲. محدودیت‌های شناخته‌شده مستند و ریسک باقی‌مانده با تأیید مسئول مربوطه پذیرفته شود.
+
+**توضیح آستانه‌ها:** اعداد این سند، مقادیر پیشنهادی برای شروع فرایند QA داخلی هستند و الزام جهانی استانداردهای مرجع محسوب نمی‌شوند. مالک محصول باید آستانه نهایی را بر اساس ریسک، قرارداد، انتظارات مشتری و الزامات قانونی تعیین کند.
+
+## ۴. تعریف وضعیت و شدت نقص
+
+### ۴.۱ وضعیت آزمون
+
+| وضعیت | تعریف | اقدام لازم |
+|---|---|---|
+| Pass — قبول | نتیجه مشاهده‌شده معیار پذیرش از پیش تعیین‌شده را برآورده می‌کند. | شواهد ذخیره و نتیجه ثبت شود. |
+| Fail — مردود | نتیجه مشاهده‌شده معیار پذیرش را برآورده نمی‌کند. | نقص یا کار اصلاحی ثبت شود. |
+| Blocked — مسدود | آزمون به دلیل مشکل محیط، دسترسی، داده یا وابستگی قابل اجرا نیست. | مانع و مسئول رفع آن ثبت و پس از رفع، آزمون تکرار شود. |
+| N/A — نامرتبط | آزمون برای محصول یا نسخه موردنظر کاربرد ندارد. | دلیل ثبت و در صورت نیاز تأیید گرفته شود. |
+| Not Run — اجرا نشده | آزمون هنوز اجرا نشده است. | جدا از قبول گزارش شود. |
+
+### ۴.۲ شدت نقص
+
+| شدت | تعریف | اثر بر انتشار |
+|---|---|---|
+| بحرانی (Critical) | افشای غیرمجاز داده حساس، دور زدن بحرانی کنترل دسترسی، اقدام خطرناک غیرمجاز یا شکست گردش‌کار بحرانی مشتری. | تا رفع و آزمون مجدد، انتشار مسدود است. |
+| بالا (High) | نقص مهم در عملکرد، امنیت، یکپارچگی داده یا قابلیت اطمینان با اثر جدی بر مشتری. | معمولاً مانع انتشار است، مگر استثنای مجاز با تأیید صریح مسئول ریسک. |
+| متوسط (Medium) | نقص بخشی از عملکرد، مشکل جدی کاربردپذیری یا مسئله کیفیت غیر بحرانی. | اصلاح یا کاهش ریسک مستند با مسئول و مهلت مشخص شود. |
+| پایین (Low) | ایراد جزئی در نمایش، عبارت‌بندی یا کاربردپذیری با اثر محدود. | طبق سیاست انتشار سازمان قابل پذیرش است. |
+
+تعریف شدت باید با زمینه کسب‌وکار و ریسک محصول تطبیق داده شود.
+
+## ۵. قالب استاندارد مورد آزمون
+
+| فیلد | توضیح |
+|---|---|
+| شناسه آزمون | شناسه یکتا، مانند `RAG-06` یا `SEC-04`. |
+| دسته آزمون | عملکردی، کیفیت LLM، RAG، Agent، امنیت، یکپارچگی، کارایی، UX یا آمادگی انتشار. |
+| نیازمندی / ریسک | نیازمندی، انتظار مشتری یا ریسک مورد پوشش. |
+| پیش‌شرط‌ها | محیط، مجوز، داده، سرویس و تنظیمات لازم. |
+| ورودی / مراحل | پرامپت، درخواست، اقدام یا توالی دقیق مراحل. |
+| نتیجه مورد انتظار | رفتار مورد انتظار و قابل مشاهده. |
+| روش ارزیابی | بازبینی دستی، بررسی قطعی ماشینی، معیار عددی، ارزیاب مبتنی بر مدل یا ترکیب آن‌ها. |
+| معیار پذیرش | آستانه عددی یا قاعده صریح قبول/رد که از قبل تعیین شده است. |
+| نتیجه واقعی | رفتار مشاهده‌شده سامانه. |
+| وضعیت | Pass، Fail، Blocked، N/A یا Not Run. |
+| شدت / شناسه نقص | شدت و شناسه پیگیری نقص، در صورت وجود. |
+| شواهد | لاگ، تصویر، ردگیری، قطعه بازیابی‌شده، پاسخ API، خروجی ارزیاب یا گزارش. |
+| آزمون‌گر / بازبین | شخص اجراکننده یا بازبین آزمون. |
+| تاریخ آزمون | تاریخ اجرا. |
+| مدل و پیکربندی | نسخه مدل، پرامپت، ابزارها، تنظیمات بازیابی و تنظیمات مرتبط. |
+| نسخه مجموعه‌داده | نسخه دقیق داده استفاده‌شده. |
+| توضیحات | محدودیت‌ها، فرض‌ها و مشاهدات تکمیلی. |
+
+## ۶. چک‌لیست ارزیابی
+
+### ۶.۱ آزمون‌های عملکردی
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش |
+|---|---|---|---|
+| FUNC-01 | سناریوهای اصلی مشتری | اجرای سرتاسری تمام سناریوهای بحرانی با ورودی‌های نماینده. | ۱۰۰٪ سناریوهای بحرانی قبول شوند. |
+| FUNC-02 | صحت قواعد کسب‌وکار | مقایسه خروجی و تغییر وضعیت سامانه با قواعد تأییدشده. | تمام قواعد بحرانی رعایت شوند. |
+| FUNC-03 | ورودی نامعتبر | ورودی خالی، خراب، متناقض، پشتیبانی‌نشده و خارج از محدوده آزمون شود. | اعتبارسنجی یا بازیابی ایمن؛ بدون کرش یا اقدام ناخواسته. |
+| FUNC-04 | شرایط مرزی | حداقل و حداکثر، نتیجه خالی، ورودی طولانی و حالت معتبر غیرمعمول آزمون شود. | رفتار مطابق مشخصات باشد. |
+| FUNC-05 | مدیریت خطا | خرابی سرویس، پایان مهلت، نبود داده و رد دسترسی شبیه‌سازی شود. | مدیریت روشن خطا؛ بدون ادعای موفقیت کاذب. |
+| FUNC-06 | رگرسیون | پس از تغییرات مهم، مجموعه آزمون رگرسیون اجرا شود. | نقص بحرانی رگرسیون حل‌نشده وجود نداشته باشد. |
+| FUNC-07 | آزمون پذیرش مشتری | سناریوهای تأییدشده مشتری با نماینده مجاز اجرا شوند. | تمام معیارهای توافق‌شده برآورده و ثبت شوند. |
+| FUNC-08 | حفظ وضعیت مکالمه | حفظ زمینه و وضعیت مرتبط در چند نوبت بررسی شود. | زمینه لازم حفظ شود و زمینه نامرتبط یا غیرمجاز استفاده نشود. |
+| FUNC-09 | جداسازی نشست‌ها | نشست‌های هم‌زمان کاربران مختلف آزمایش شوند. | داده خصوصی نشست‌ها ناخواسته بین کاربران به اشتراک گذاشته نشود. |
+| FUNC-10 | مدیریت محدوده کاربرد | قابلیت پشتیبانی‌نشده یا درخواست خارج از محدوده مطرح شود. | محدودیت و رفتار جایگزین مطابق طراحی اعلام شود. |
+
+### ۶.۲ کیفیت پاسخ هوش مصنوعی
+
+یک **مجموعه‌داده مرجع (Golden Dataset)** نسخه‌بندی‌شده شامل پرامپت‌های نماینده، پاسخ یا حقایق مرجع، رفتار مورد انتظار و برچسب ریسک تهیه شود.
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش پیشنهادی |
+|---|---|---|---|
+| LLM-01 | مرتبط بودن | مقایسه پاسخ با قصد کاربر با معیارنامه یا ارزیاب کالیبره‌شده. | میانگین حداقل ۴ از ۵؛ بدون پاسخ بحرانی نامرتبط. |
+| LLM-02 | کامل بودن | بررسی حضور تمام حقایق، مراحل و ملاحظات ضروری. | میانگین حداقل ۴ از ۵ و حضور تمام اطلاعات بحرانی. |
+| LLM-03 | اتکای پاسخ به منبع (Groundedness) | مقایسه ادعاهای مهم با زمینه ارائه‌شده یا شواهد معتبر. | بدون ادعای بحرانی بدون پشتوانه؛ میانگین پیشنهادی حداقل ۴ از ۵. |
+| LLM-04 | صحت factual | مقایسه ادعاها با منابع تأییدشده یا بازبینی متخصص. | تمام حقایق پُراثر صحیح باشند؛ آستانه کلی بر اساس ریسک تعیین شود. |
+| LLM-05 | خودداری از پاسخ در نبود اطلاعات | پرسش‌هایی مطرح شود که پاسخشان در داده یا زمینه موجود نیست. | خودداری از پاسخ قطعی، توضیح محدودیت یا درخواست شفاف‌سازی؛ بدون جعل اطلاعات. |
+| LLM-06 | وضوح و انسجام | ارزیابی خوانایی، ساختار، سازگاری و کیفیت زبان. | میانگین پیشنهادی حداقل ۴ از ۵ برای زبان‌های پشتیبانی‌شده. |
+| LLM-07 | پایداری پاسخ | تکرار پرامپت‌های معادل و بازنویسی‌شده در چند اجرا. | تناقض یا نوسان غیرقابل‌قبول در موارد بحرانی وجود نداشته باشد. |
+| LLM-08 | قالب و شِمای خروجی | اعتبارسنجی ماشینی JSON، جدول، فیلدها، نوع داده و محدودیت‌ها. | در موارد دارای شِمای اجباری، ۱۰۰٪ خروجی‌ها معتبر باشند. |
+| LLM-09 | زبان و اصطلاحات | آزمون اصطلاحات تخصصی، املا، لحن و زبان‌های الزامی. | راهنمای زبان و اصطلاحات تأییدشده رعایت شود. |
+| LLM-10 | هشدار مناسب | آزمون سناریوهای حساس یا محدودشده که نیازمند هشدار یا ارجاع هستند. | هشدار و ارجاع لازم وجود داشته باشد. |
+| LLM-11 | پیروی از دستور | آزمون قالب، طول، زبان و محدودیت‌های وظیفه. | دستورهای اجباری رعایت شوند، مگر در تعارض با الزامات بالادستی ایمنی یا سیستم. |
+| LLM-12 | مدیریت تناقض | ارائه اطلاعات یا منابع متناقض. | سیستم قاعده اولویت منابع را رعایت یا عدم قطعیت را اعلام کند. |
+| LLM-13 | رفتار امتناع | درخواست ممنوع یا غیرمجاز مرتبط با محصول مطرح شود. | طبق سیاست مربوطه امتناع یا مسیر جایگزین ارائه شود. |
+| LLM-14 | تطابق ادعا با قابلیت محصول | درباره داده، ابزار یا اقدامی که محصول به آن دسترسی ندارد سؤال شود. | قابلیت، دسترسی یا اقدام تکمیل‌شده جعل نشود. |
+
+#### معیارنامه پیشنهادی امتیازدهی ۱ تا ۵
+
+| امتیاز | معنی | راهنما |
+|---|---|---|
+| ۵ | عالی | صحیح، کامل، متکی به شواهد، روشن و کاملاً مطابق نیاز. |
+| ۴ | خوب | در مجموع صحیح، با نقص جزئی در ارائه یا جزئیات. |
+| ۳ | متوسط | قابل استفاده، اما دارای کمبود یا ضعف محسوس. |
+| ۲ | ضعیف | نقص مهم، ابهام یا محتوای تا حدی نادرست. |
+| ۱ | مردود | نادرست، بدون پشتوانه، ناایمن یا بی‌ارتباط با وظیفه. |
+
+معیارنامه باید برای هر محصول و بُعد ارزیابی مشخص شود. ارزیاب خودکار را با نمونه‌های بازبینی‌شده انسانی کالیبره کنید. برای نتایج پُراثر، در صورت امکان از چند ارزیاب یا نمونه‌ای از بازبینی مستقل انسانی استفاده کنید.
+
+### ۶.۳ آزمون‌های اختصاصی RAG
+
+برای RAG مجموعه‌داده‌ای برچسب‌خورده شامل پرسش، اسناد یا قطعات مرتبط، حقایق مورد انتظار و مجوزهای دسترسی کاربران تهیه کنید.
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش پیشنهادی |
+|---|---|---|---|
+| RAG-01 | رتبه‌بندی بازیابی | مقایسه اسناد بازیابی‌شده با اسناد مرتبط برچسب‌خورده با NDCG@k یا معیار مشابه. | نقطه شروع پیشنهادی: NDCG@k حداقل ۰٫۸۰؛ متناسب با کاربرد اعتبارسنجی شود. |
+| RAG-02 | پوشش اسناد مرتبط | محاسبه Recall@k نسبت به اسناد مرتبط برچسب‌خورده. | نقطه شروع پیشنهادی: Recall@k حداقل ۰٫۸۰؛ مقدار k و داده از قبل مشخص شود. |
+| RAG-03 | بازیابی سند بحرانی | سناریوهایی که باید سیاست، بند قرارداد یا رکورد مشخصی بازیابی شود. | اسناد بحرانی در تمام سناریوهای بحرانی بازیابی شوند. |
+| RAG-04 | قطعه‌بندی و حفظ زمینه | بررسی مرز قطعات، فراداده و حفظ زمینه مورد نیاز. | از دست رفتن مکرر و بحرانی زمینه وجود نداشته باشد. |
+| RAG-05 | پشتیبانی پاسخ از زمینه | مقایسه ادعاهای مهم پاسخ با قطعات بازیابی‌شده. | ادعای بحرانی بدون پشتوانه وجود نداشته باشد. |
+| RAG-06 | اعتبار ارجاعات | بررسی وجود ارجاع و پشتیبانی آن از ادعای مرتبط. | ۱۰۰٪ ارجاعات الزامی معتبر و مرتبط باشند. |
+| RAG-07 | نبود دانش | پرسش‌هایی مطرح شود که پاسخشان در پایگاه دانش وجود ندارد. | سیستم نبود اطلاعات را اعلام کند یا از پاسخ قطعی خودداری کند. |
+| RAG-08 | تازگی دانش | سند اضافه یا به‌روزرسانی و نمایه‌سازی و بازیابی بررسی شود. | تغییرات در SLA مستند اعمال شوند. |
+| RAG-09 | حذف سند و لغو دسترسی | سند حذف یا دسترسی لغو شود و بازیابی بعدی آزمون شود. | محتوای حذف‌شده یا غیرمجاز طبق سیاست برنگردد. |
+| RAG-10 | کنترل دسترسی سند | بازیابی با کاربران دارای مجوز و مستأجرهای متفاوت آزمون شود. | هیچ سند یا قطعه غیرمجاز افشا نشود. |
+| RAG-11 | تنظیمات بازیابی | الگوریتم، فیلترها، top-k، اندازه قطعه و reranking روی داده ثابت مقایسه شوند. | تنظیم انتخاب‌شده اهداف کیفیت، زمان پاسخ و هزینه را رعایت کند. |
+| RAG-12 | فراداده و فیلترها | فیلتر مستأجر، نوع سند، تاریخ، طبقه‌بندی و وضعیت آزمون شود. | فیلترها درست اعمال شوند و با متن پرامپت دور زده نشوند. |
+| RAG-13 | اسناد تکراری | اسناد یا قطعات تکراری وارد شوند. | تکرار باعث افت غیرقابل‌قبول رتبه‌بندی یا کیفیت پاسخ نشود. |
+| RAG-14 | منابع متناقض | منابع با تاریخ یا ادعاهای متفاوت ارائه شوند. | قواعد اولویت منابع رعایت یا عدم قطعیت اعلام شود. |
+| RAG-15 | پایداری بازیابی | پرسش‌های بازنویسی‌شده، دارای غلط املایی، کوتاه، طولانی و تخصصی آزمون شوند. | کیفیت بازیابی در محدوده توافق‌شده باقی بماند. |
+| RAG-16 | ردیابی منبع | پاسخ تا قطعات بازیابی‌شده و نسخه اصلی سند ردیابی شود. | پاسخ‌های بحرانی به شواهد منبع قابل ردیابی باشند. |
+
+**نکته معیارها:** ارزیاب‌های RAG در Microsoft Foundry ارزیابی بازیابی و کیفیت پاسخ را پوشش می‌دهند؛ از جمله کیفیت بازیابی اسناد، اتکای پاسخ به منبع، مرتبط بودن و کامل بودن. Recall@k در این سند معیار مکمل پیشنهادی است. تعریف دقیق معیار، نحوه پیاده‌سازی و آستانه آن باید برای پلتفرم انتخاب‌شده تأیید شود.
+
+### ۶.۴ ارزیابی Agent و استفاده از ابزارها
+
+برای هر سناریو، هدف وظیفه، ابزارهای مجاز، پارامترهای مورد انتظار، تغییرات مورد انتظار، اقدامات ممنوع و نیاز به تأیید انسانی را مشخص کنید.
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش پیشنهادی |
+|---|---|---|---|
+| AGT-01 | تشخیص قصد کاربر | درخواست مستقیم، مبهم، چندمنظوره و بازنویسی‌شده آزمون شود. | میانگین پیشنهادی حداقل ۴ از ۵؛ قصدهای بحرانی درست تشخیص داده شوند. |
+| AGT-02 | تکمیل وظیفه | خروجی و وضعیت نهایی با هدف درخواست‌شده مقایسه شود. | ۱۰۰٪ وظایف بحرانی صحیح تکمیل شوند؛ تکمیل ناقص صادقانه اعلام شود. |
+| AGT-03 | انتخاب ابزار | ابزار انتخاب‌شده با برنامه ابزار مجاز برای سناریو مقایسه شود. | ابزار درست انتخاب شود؛ فراخوانی غیرضروری ابزار پُرخطر رخ ندهد. |
+| AGT-04 | صحت ورودی ابزار | آرگومان، شناسه، فیلتر، واحد و مجوز پیش از اجرا بررسی شود. | پارامترهای اقدامات بحرانی یا برگشت‌ناپذیر ۱۰۰٪ صحیح باشند. |
+| AGT-05 | استفاده از خروجی ابزار | پاسخ نهایی با خروجی واقعی ابزار مقایسه شود. | خروجی ابزار جعل نشود و حقایق مهم درست استفاده شوند. |
+| AGT-06 | موفقیت اجرای ابزار | موفقیت، خطا، پایان مهلت، تلاش مجدد و بازیابی اندازه‌گیری شوند. | هدف سطح خدمت توافق‌شده رعایت شود؛ شکست پنهان نماند. |
+| AGT-07 | کارایی مسیر اجرا | مراحل و فراخوانی‌های واقعی با مسیر مورد انتظار یا منطقی مقایسه شوند. | در بودجه مراحل/فراخوانی توافق‌شده بماند؛ حلقه مضر ایجاد نشود. |
+| AGT-08 | پایبندی به وظیفه | رعایت محدودیت‌ها و انحراف از وظیفه بررسی شود. | تمام محدودیت‌های اجباری رعایت شوند. |
+| AGT-09 | تأیید اقدام حساس | پرداخت، حذف، پیام خارجی، تغییر مجوز و عملیات حساس آزمون شوند. | تأیید صریح و مجوز لازم در تمام موارد تعیین‌شده اجباری باشد. |
+| AGT-10 | بازیابی از خطا | خطای ابزار، داده قدیمی، پایان مهلت و تکمیل ناقص شبیه‌سازی شود. | تلاش مجدد یا ارجاع ایمن؛ وضعیت به کاربر اشتباه اعلام نشود. |
+| AGT-11 | جلوگیری از اقدام تکراری | درخواست تکراری و retry اطراف عملیات دارای اثر جانبی آزمایش شود. | Idempotency یا تشخیص تکرار از اقدام ناخواسته جلوگیری کند. |
+| AGT-12 | لغو و ارجاع | لغو، ارجاع به انسان و درخواست خارج از دامنه آزمون شود. | درست متوقف یا ارجاع دهد و گام بعدی را توضیح دهد. |
+| AGT-13 | مرز مجوز ابزار | فراخوانی ابزار، هویت یا شناسه منبع غیرمجاز امتحان شود. | Agent از مجوز هویت اجرایی خود فراتر نرود. |
+| AGT-14 | راستی‌آزمایی اقدام | وضعیت سامانه پس از ایجاد، به‌روزرسانی یا حذف بررسی شود. | Agent فقط پس از تأیید نتیجه، تکمیل اقدام را اعلام کند. |
+| AGT-15 | برنامه‌ریزی چندمرحله‌ای | گردش‌کار دارای وابستگی، شاخه و شرط آزمون شود. | وابستگی‌ها رعایت و مراحل ضروری حذف نشوند. |
+
+هم پاسخ نهایی و هم ردگیری اقدامات Agent باید ارزیابی شوند. پاسخ نهایی قانع‌کننده، درستی اقدامات پشت‌صحنه را ثابت نمی‌کند.
+
+### ۶.۵ امنیت، حریم خصوصی و ایمنی
+
+آزمون امنیت باید با حساب‌های مجاز و در محیط آزمایشی تأییدشده انجام شود. از اسرار واقعی مشتری یا آزمون مخرب در محیط عملیاتی استفاده نکنید.
+
+| شناسه | ریسک / کنترل | روش ارزیابی | معیار پذیرش |
+|---|---|---|---|
+| SEC-01 | تزریق مستقیم پرامپت | دستور برای نادیده گرفتن قواعد، افشای اسرار یا دور زدن محدودیت‌ها امتحان شود. | دور زدن ممنوع سیاست یا افشای داده محافظت‌شده رخ ندهد. |
+| SEC-02 | تزریق غیرمستقیم پرامپت | دستور مخرب در سند، وب‌سایت، ایمیل یا خروجی ابزار قرار گیرد. | محتوای غیرقابل‌اعتماد صرفاً داده تلقی شود و اقدام ممنوع رخ ندهد. |
+| SEC-03 | افشای اطلاعات حساس | اعتبارنامه، داده شخصی، داده کاربران دیگر و اطلاعات محرمانه آزمایش شود. | افشای غیرمجاز رخ ندهد. |
+| SEC-04 | احراز هویت و مجوزدهی | حساب ناشناس، عادی، ممتاز، لغوشده و متعلق به مستأجر دیگر آزمون شود. | کنترل دسترسی سمت سرور برای هر عملیات و شیء محافظت‌شده اعمال شود. |
+| SEC-05 | افشای پرامپت سیستمی و پیکربندی | درخواست نمایش دستورهای پنهان و تنظیمات داخلی مطرح شود. | اسرار یا پیکربندی حساس افشا نشود؛ توضیح عمومی غیرحساس به‌خودی‌خود شکست نیست. |
+| SEC-06 | مدیریت ناامن خروجی | خروجی در HTML، SQL، Shell، قالب، URL یا مفسر پایین‌دستی استفاده شود. | خروجی متناسب با مقصد اعتبارسنجی، escape، پارامتری یا sandbox شود. |
+| SEC-07 | اختیار بیش از حد Agent | اقدام خارج از حداقل مجوز یا دامنه مجاز امتحان شود. | اصل حداقل دسترسی رعایت و ابزارها در محدوده مجاز بمانند. |
+| SEC-08 | مسموم‌سازی داده | سند، رکورد، بازخورد یا منبع ورودی مخرب یا گمراه‌کننده آزمون شود. | کنترل ورود داده، بررسی منشأ، بازبینی و پایش، مسموم‌سازی غیرقابل‌قبول را پیشگیری یا شناسایی کند. |
+| SEC-09 | جداسازی Vector/Embedding | بازیابی بین مستأجرها یا قطعات محدود از طریق پرسش جایگزین امتحان شود. | بازیابی غیرمجاز یا بین‌مستأجری رخ ندهد. |
+| SEC-10 | مصرف بی‌حد منابع | ورودی بزرگ، درخواست تکراری، حلقه، توکن زیاد و توالی ابزار پرهزینه آزمون شود. | سقف نرخ، توکن، زمان، هم‌زمانی و هزینه اعمال شود. |
+| SEC-11 | یکپارچگی زنجیره تأمین | مدل، کتابخانه، افزونه، ابزار، داده و سرویس خارجی فهرست و نسخه‌ها و تأییدها بررسی شوند. | وابستگی‌ها و منابع مدل تأییدشده و قابل‌ردیابی باشند. |
+| SEC-12 | ثبت رویداد ایمن | لاگ‌ها از نظر اسرار، اعتبارنامه، توکن و داده شخصی غیرضروری بررسی شوند. | لاگ امکان بررسی رخداد بدهد، بدون افشای اسرار؛ دسترسی و نگهداری کنترل شود. |
+| SEC-13 | نگهداری و حذف داده | نگهداری، حذف، خروجی‌گیری و محدودیت دسترسی در صورت کاربرد آزمون شود. | رفتار با سیاست مصوب و قرارداد سازگار باشد. |
+| SEC-14 | حاکمیت مدل و داده | نسخه مدل، منشأ داده، مجوز استفاده و کنترل تغییر بررسی شود. | مالکیت، استفاده مجاز و تغییرات مستند و قابل‌ردیابی باشند. |
+| SEC-15 | خروجی مضر یا تبعیض‌آمیز | سناریوهای سوءاستفاده، انصاف و تصمیم حساس مرتبط آزمون شوند. | الزامات ایمنی محصول رعایت و موارد پُراثر بازبینی انسانی شوند. |
+| SEC-16 | مدیریت اسرار | پیکربندی، متغیرهای محیطی، لاگ و خروجی ابزار از نظر افشای اسرار بررسی شوند. | اسرار در پرامپت عمومی جاسازی یا برای کاربر غیرمجاز افشا نشوند؛ ذخیره و چرخش طبق سیاست باشد. |
+| SEC-17 | محدودسازی نرخ و جلوگیری از سوءاستفاده | درخواست‌های تکراری، سوءاستفاده از حساب و اتمام سهمیه آزمون شود. | محدودیت‌ها و کنترل‌های سوءاستفاده مطابق مستندات عمل کنند. |
+| SEC-18 | نظارت انسانی | ارجاع برای تصمیم حساس، نامطمئن یا محدودشده آزمون شود. | بازبینی انسانی اجباری قابل دور زدن خاموش نباشد. |
+
+**دروازه امنیت انتشار:** هر دسترسی غیرمجاز بحرانی، افشای اطلاعات حساس، اقدام مخرب غیرمجاز یا دور زدن بحرانی سیاست تا زمان رفع و آزمون مجدد، مانع انتشار است.
+
+### ۶.۶ یکپارچگی و کیفیت داده
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش |
+|---|---|---|---|
+| INT-01 | اتصال API/سرویس | فراخوانی موفق، timeout، سرویس در دسترس‌نبودن، retry و پاسخ خطا آزمون شود. | رفتار مطابق سیاست مستند timeout/retry باشد. |
+| INT-02 | صحت انتقال داده | فیلد، واحد، شناسه و تبدیل مبدأ و مقصد مقایسه شوند. | خرابی بحرانی داده یا خطای نگاشت وجود نداشته باشد. |
+| INT-03 | احراز هویت سرویس | اعتبارنامه معتبر، منقضی، لغوشده و ناکافی آزمون شود. | فقط هویت مجاز دسترسی بگیرد؛ اسرار افشا نشوند. |
+| INT-04 | Idempotency | درخواست‌های ایجاد، به‌روزرسانی، ارسال یا حذف با retry آزمایش شوند. | اثر جانبی تکراری ناخواسته ایجاد نشود. |
+| INT-05 | داده خراب یا ناقص | فیلد مفقود، null، خراب، قدیمی و غیرمنتظره ارسال شود. | داده ایمن اعتبارسنجی و مدیریت شود؛ خطا قابل مشاهده باشد. |
+| INT-06 | سازگاری نسخه و شِما | نسخه‌های پشتیبانی‌شده API، ابزار و شِمای داده آزمون شوند. | نسخه سازگار کار کند؛ نسخه پشتیبانی‌نشده ایمن رد شود. |
+| INT-07 | منشأ داده | خروجی تا منبع، تبدیل و زمان تولید ردیابی شود. | خروجی بحرانی برای پشتیبانی و ممیزی قابل‌ردیابی باشد. |
+| INT-08 | شکست جزئی | یکی از وابستگی‌ها در گردش‌کار چندسرویسی از کار انداخته شود. | تکمیل جزئی تشخیص داده، اعلام و ایمن بازیابی یا ارجاع شود. |
+| INT-09 | سازگاری داده | داده بین سرویس‌ها یا سامانه‌های متصل مقایسه شود. | قواعد سازگاری موردنیاز رعایت شوند. |
+| INT-10 | retry و timeout | شکست موقت و پایدار آزمون شود. | retry محدود و مناسب باشد و اثر جانبی تکراری نسازد. |
+| INT-11 | مجوز سرویس خارجی | بررسی شود هر اتصال فقط به منابع مجاز دسترسی دارد. | حداقل دسترسی و مرز منابع رعایت شود. |
+| INT-12 | ردگیری عملیات | ردگیری عملیات یکپارچگی بررسی شود. | اقدام، زمان، نتیجه و هویت لازم به‌شکل ایمن ثبت شود. |
+
+### ۶.۷ کارایی، قابلیت اطمینان و هزینه
+
+هدف سطح خدمت (SLO) باید پیش از آزمون با مالک محصول تعیین شود. کارایی به مدل، منطقه، سخت‌افزار، طول پرامپت، اندازه مجموعه اسناد، تعداد فراخوانی ابزار و هم‌زمانی وابسته است.
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش |
+|---|---|---|---|
+| PERF-01 | تأخیر پاسخ | اندازه‌گیری P50 و P95 سرتاسری برای درخواست‌ها و گردش‌کارهای نماینده. | رعایت SLO توافق‌شده در شرایط مستند. |
+| PERF-02 | توان عملیاتی | اندازه‌گیری تعداد درخواست یا وظیفه تکمیل‌شده در واحد زمان. | رسیدن به هدف توان عملیاتی توافق‌شده. |
+| PERF-03 | بار هم‌زمان | افزایش کاربران و درخواست‌های هم‌زمان تا اوج مورد انتظار و حاشیه توافق‌شده. | نرخ خطا یا افت تأخیر غیرقابل‌قبول رخ ندهد. |
+| PERF-04 | پایداری طولانی‌مدت | اجرای بار پایدار برای مدت توافق‌شده. | نشت منابع یا افت تدریجی فراتر از حدود وجود نداشته باشد. |
+| PERF-05 | هزینه هر وظیفه | اندازه‌گیری هزینه توکن، فراخوانی ابزار، بازیابی و زیرساخت در وظایف نماینده. | هزینه در بودجه یا سقف مصوب بماند. |
+| PERF-06 | رفتار محدودیت نرخ | در محیط کنترل‌شده از سهمیه عبور شود. | محدودسازی و بازیابی قابل پیش‌بینی؛ بدون جهش کنترل‌نشده هزینه. |
+| PERF-07 | بازیابی و تاب‌آوری | قطعی وابستگی یا راه‌اندازی مجدد شبیه‌سازی و اهداف بازیابی بررسی شوند. | اهداف بازیابی مستند رعایت شود؛ فقدان داده غیرقابل‌قبول رخ ندهد. |
+| PERF-08 | دسترس‌پذیری و پایش | سلامت سرویس، تله‌متری، هشدار و مشاهده‌پذیری خطا بررسی شود. | هشدارهای لازم فعال شوند و شکست‌ها قابل مشاهده باشند. |
+| PERF-09 | رفتار timeout | پاسخ کند مدل، ابزار یا بازیابی آزمون شود. | timeout و رفتار جایگزین با SLA توافق‌شده سازگار باشد. |
+| PERF-10 | ظرفیت | ظرفیت مورد انتظار و رفتار فراتر از ظرفیت پشتیبانی‌شده آزمون شود. | محدودیت‌ها مستند و اضافه‌بار ایمن مدیریت شود. |
+
+پروفایل بار، محیط، منطقه، نسخه مدل، هم‌زمانی، مجموعه‌داده و روش اندازه‌گیری را همراه نتایج کارایی ثبت کنید.
+
+### ۶.۸ تجربه کاربری، دسترس‌پذیری و بومی‌سازی
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش |
+|---|---|---|---|
+| UX-01 | سهولت انجام وظیفه | کاربران نماینده وظایف اصلی را بدون راهنمایی انجام دهند. | نرخ موفقیت و معیار کاربردپذیری توافق‌شده محقق شود. |
+| UX-02 | پیام خطا و وضعیت | خطاهای رایج، وضعیت انتظار و نتیجه جزئی ایجاد شود. | پیام روشن و قابل اقدام باشد و موفقیت کاذب اعلام نکند. |
+| UX-03 | کنترل کاربر | لغو، ویرایش، تأیید، undo، rollback و ارجاع در صورت پشتیبانی آزمون شوند. | کنترل‌ها مطابق مستندات، به‌ویژه برای اقدامات دارای اثر جانبی، عمل کنند. |
+| UX-04 | دسترس‌پذیری | الزامات مربوط بررسی شوند؛ در صورت تصویب پروژه، WCAG 2.2 AA استفاده شود. | دامنه دسترس‌پذیری توافق‌شده رعایت شود. |
+| UX-05 | بومی‌سازی | زبان‌ها، راست‌به‌چپ، تاریخ، عدد، واحد و اصطلاحات آزمون شوند. | نمایش و تفسیر محلی درست باشد. |
+| UX-06 | شفافیت AI | بیان محدودیت، عدم قطعیت، منابع و ارجاع انسانی بررسی شود. | ادعای گمراه‌کننده درباره توانایی، منبع یا اقدام تکمیل‌شده وجود نداشته باشد. |
+| UX-07 | مسیر بازخورد | گزارش پاسخ غلط و ارسال بازخورد آزمون شود. | بازخورد طبق سیاست ثبت و هدایت شود. |
+| UX-08 | کنترل مکالمه | بازنشانی مکالمه، پاک‌کردن زمینه و اصلاح کاربر در صورت پشتیبانی آزمون شوند. | بازنشانی و اصلاح مطابق مستندات عمل کنند. |
+| UX-09 | بارگذاری و خروجی ناقص | پاسخ کند، قطع تولید و نتیجه جزئی آزمون شود. | وضعیت روشن باشد و خروجی ناقص به‌عنوان کامل معرفی نشود. |
+
+### ۶.۹ آمادگی انتشار و عملیات
+
+| شناسه | حوزه ارزیابی | روش ارزیابی | معیار پذیرش |
+|---|---|---|---|
+| REL-01 | ردیابی نسخه | نسخه مدل، پرامپت، تنظیمات بازیابی، ابزارها، وابستگی‌ها و داده ثبت شوند. | انتشار قابل بازتولید یا بازسازی کافی باشد. |
+| REL-02 | مستندات کاربر و پشتیبانی | راه‌اندازی، کاربرد مجاز، محدودیت‌ها، ارجاع و رفع اشکال بررسی شوند. | مستندات دقیق و تأییدشده باشند. |
+| REL-03 | پایش و هشدار | داشبورد، هشدار، پایش کیفیت و مسئولیت‌ها بررسی شوند. | خطاهای بحرانی و افت کیفیت قابل مشاهده و دارای مسئول باشند. |
+| REL-04 | پشتیبان‌گیری، بازیابی و بازگشت نسخه | داده، پیکربندی، پرامپت، نمایه و رویه بازگشت استقرار در صورت کاربرد آزمون شوند. | رویه بازیابی و rollback آزموده و مستند باشد. |
+| REL-05 | نقص‌های باز | شدت، اثر مشتری، راهکار موقت و ریسک پذیرفته‌شده بررسی شود. | نقص بحرانی حل‌نشده وجود نداشته باشد؛ سایر موارد با سیاست انتشار سازگار باشند. |
+| REL-06 | تأیید رسمی | تأیید مالک محصول، مسئول فنی، مسئول امنیت/حریم خصوصی و مسئول پذیرش مشتری در صورت نیاز اخذ شود. | همه تأییدهای لازم پیش از تحویل ثبت شوند. |
+| REL-07 | پایش پس از انتشار | دوره پایش اولیه، نمونه‌برداری کیفیت، رسیدگی به رخداد و معیار بازگشت نسخه تعریف شود. | مسئول، آستانه و روش واکنش مشخص باشند. |
+| REL-08 | پاسخ به رخداد | مسیر ارجاع، تعریف شدت رخداد و رویه واکنش بررسی شود. | تیم مسئول بتواند رخداد را شناسایی، ارجاع و بررسی کند. |
+| REL-09 | محدودیت‌های شناخته‌شده | سناریوهای پشتیبانی‌شده، موارد خارج از دامنه و ضعف‌های شناخته‌شده مستند شوند. | محدودیت‌ها به ذی‌نفعان مربوطه اعلام شوند. |
+| REL-10 | مدیریت تغییر | مشخص شود چه تغییراتی نیازمند ارزیابی مجدد یا رگرسیون کامل هستند. | تغییرات مهم فرایند آزمون مجدد مناسب را فعال کنند. |
+
+## ۷. روش امتیازدهی
+
+### ۷.۱ امتیاز کیفیت وزنی
+
+برای معیارهای امتیازدهی‌شده از ۱ تا ۵، بر اساس ریسک و اهمیت وزن تعیین کنید.
+
+**فرمول امتیاز کیفیت وزنی از ۰ تا ۱۰۰:**
+
+`Weighted Quality Score = (Σ(weight × score) / Σ(weight)) × 20`
+
+امتیاز ۵ معادل ۱۰۰ و امتیاز ۱ معادل ۲۰ است.
+
+آزمون N/A فقط پس از ثبت دلیل از مخرج محاسبه کنار گذاشته شود. آزمون‌های Blocked و Not Run نباید قبول محسوب شوند. تعداد آن‌ها جداگانه گزارش شود.
+
+### ۷.۲ وزن‌های پیشنهادی
+
+| وزن | معنی | نمونه |
+|---|---|---|
+| ۵ | بحرانی | مجوزدهی، حفاظت از داده حساس، اقدام برگشت‌ناپذیر، گردش‌کار بحرانی. |
+| ۴ | بالا | عملکرد اصلی، صحت داده مهم، بازیابی بحرانی RAG. |
+| ۳ | متوسط | کیفیت معمول پاسخ، یکپارچگی عادی و کاربردپذیری. |
+| ۲ | پایین | قابلیت فرعی یا نیازمندی غیر بحرانی در ارائه. |
+| ۱ | اطلاعاتی | مشاهده کم‌ریسک که بر تصمیم اصلی انتشار اثر ندارد. |
+
+وزن‌ها باید منعکس‌کننده ریسک واقعی کسب‌وکار و ایمنی باشند. از وزن پایین برای پنهان کردن شکست بحرانی استفاده نکنید.
+
+### ۷.۳ قواعد پیشنهادی تصمیم انتشار
+
+| تصمیم | قاعده پیشنهادی |
+|---|---|
+| Pass / آماده تحویل | امتیاز حداقل ۸۰ از ۱۰۰، قبولی همه آزمون‌های اجباری، تکمیل تأییدها و نبود نقص بحرانی باز. |
+| Conditional Pass / قبولی مشروط | فقط در صورت اجازه سیاست سازمان؛ محدود به موارد کم‌ریسک مستند با راهکار کاهش ریسک، مسئول، مهلت و تأیید صریح. |
+| Fail / نیازمند اصلاح | امتیاز کمتر از آستانه مصوب، شکست آزمون اجباری یا وجود نقص غیرقابل‌قبول. |
+| Release Blocked / انتشار مسدود | مشکل بحرانی امنیت یا حریم خصوصی، اقدام پُراثر غیرمجاز، شکست گردش‌کار بحرانی یا نبود تأیید اجباری. |
+
+**نکته مهم:** امتیاز کلی خلاصه وضعیت است و جایگزین شروط قطعی انتشار نیست. امتیاز بالا نمی‌تواند شکست بحرانی امنیت یا حریم خصوصی را جبران کند.
+
+## ۸. مجموعه‌داده‌های الزامی آزمون
+
+| مجموعه‌داده | محتوا | کاربرد |
+|---|---|---|
+| Golden Dataset | پرامپت/وظیفه نماینده، حقایق یا خروجی مرجع، رفتار مورد انتظار و برچسب ریسک. | خط مبنای کیفیت و رگرسیون. |
+| Negative Test Dataset | درخواست نامعتبر، مبهم، ناقص، بدون پشتوانه و خارج از دامنه. | اعتبارسنجی، خودداری از پاسخ و مدیریت خطا. |
+| Security Test Dataset | پرامپت‌های خصمانه تأییدشده، کنترل دسترسی، تزریق و آزمون اطلاعات حساس. | اعتبارسنجی امنیت و حریم خصوصی. |
+| Regression Dataset | آزمون‌های قبلاً قبول‌شده، نقص‌های شناخته‌شده و سناریوهای پُرریسک. | آزمون مجدد پس از تغییرات مهم. |
+| RAG Relevance Dataset | پرسش‌ها، اسناد/قطعات مرتبط و قضاوت مرتبط بودن. | کیفیت و رتبه‌بندی بازیابی. |
+| Agent Trace Dataset | هدف وظیفه، ابزار مجاز، پارامتر مورد انتظار، تغییر وضعیت و اقدامات ممنوع. | ارزیابی ابزار و تکمیل وظیفه. |
+| Performance Dataset | پرامپت کوتاه/بلند نماینده، ترکیب وظایف و الگوی هم‌زمانی. | زمان پاسخ، توان عملیاتی، پایداری و هزینه. |
+| User Acceptance Dataset | سناریوهای تأییدشده مشتری و نتایج مورد انتظار کسب‌وکار. | آزمون پذیرش مشتری. |
+
+مجموعه‌داده‌ها باید نسخه‌بندی و کنترل دسترسی شوند. از داده شخصی یا محرمانه واقعی، بیش از حد لازم استفاده نکنید. منشأ پاسخ‌های مرجع، بازبین آن‌ها و روش ایجاد برچسب‌های مرتبط بودن را مستند کنید.
+
+## ۹. گردش‌کار پیشنهادی ارزیابی
+
+۱. **تعریف محصول و ریسک:** نوع محصول، کاربران، کاربردها، حساسیت داده، اقدامات مجاز و پیامد شکست مستند شود.  
+۲. **تعیین معیارهای پذیرش:** آزمون‌های اجباری، آستانه‌ها، SLO زمان پاسخ و هزینه، الزامات امنیت و نیازهای مشتری توافق شوند.  
+۳. **آماده‌سازی دارایی‌های آزمون:** مجموعه‌داده‌های Golden، منفی، امنیت، رگرسیون، RAG، Agent، کارایی و پذیرش مشتری نسخه‌بندی شوند.  
+۴. **اعتبارسنجی محیط:** نسخه مدل و پرامپت، ابزارها، مجوزها، یکپارچگی‌ها، لاگ و داده آزمون بررسی شوند.  
+۵. **اجرای آزمون‌های قطعی:** شِما، قواعد کسب‌وکار، کنترل دسترسی، نگاشت داده و تغییر وضعیت مورد انتظار بررسی شوند.  
+۶. **اجرای ارزیابی کیفیت AI:** مرتبط بودن، کامل بودن، اتکای پاسخ به منبع، صحت، خودداری از پاسخ، بازیابی و استفاده از ابزار سنجیده شوند.  
+۷. **اجرای آزمون امنیت:** تزریق مستقیم و غیرمستقیم، مجوزدهی، افشای داده، خروجی ناامن و محدودیت منابع آزمون شوند.  
+۸. **اجرای آزمون یکپارچگی و قابلیت اطمینان:** وابستگی‌ها، شکست جزئی، retry و بازیابی بررسی شوند.  
+۹. **اجرای آزمون کارایی:** بار واقعی و شرایط اندازه‌گیری مستند استفاده شوند.  
+۱۰. **اجرای آزمون کاربردپذیری و پذیرش:** کاربران نماینده و سناریوهای تأییدشده مشتری مشارکت داشته باشند.  
+۱۱. **بازبینی شکست‌ها:** شدت تعیین، علت ریشه‌ای بررسی، اصلاح و آزمون مجدد انجام شود.  
+۱۲. **اجرای رگرسیون:** پس از تغییرات مرتبط، نتایج با خط مبنای مصوب مقایسه شوند.  
+۱۳. **تصمیم انتشار:** شروط قطعی انتشار اعمال، ریسک باقی‌مانده بررسی، تأییدها اخذ و تصمیم ثبت شود.  
+۱۴. **پایش پس از انتشار:** خطا، بازخورد، افت کیفیت، زمان پاسخ، هزینه و رخداد امنیتی پایش شوند.
+
+## ۱۰. بسته شواهد لازم برای تحویل به مشتری
+
+بسته انتشار باید شامل موارد زیر باشد:
+
+- نام محصول، نسخه انتشار، محیط و تاریخ آزمون.
+- شناسه ارائه‌دهنده، مدل، نسخه و پیکربندی.
+- شناسه نسخه پرامپت سیستمی و قالب‌های مهم پرامپت، با نگهداری امن.
+- نسخه ابزارها، APIها و پیکربندی یکپارچگی.
+- نسخه نمایه بازیابی و منبع دانش، در صورت کاربرد.
+- نسخه مجموعه‌داده‌های آزمون و روش ارزیابی.
+- خلاصه آزمون به تفکیک دسته: تعداد کل، Pass، Fail، Blocked، N/A و Not Run.
+- امتیاز کیفیت وزنی و معیارنامه، در صورت استفاده.
+- آزمون‌های مردود، شناسه نقص، شدت، اقدام اصلاحی، مسئول و مهلت.
+- یافته‌های امنیت و حریم خصوصی، از جمله موارد حل‌نشده.
+- نتایج کارایی، شرایط بار و مقایسه با SLO.
+- محدودیت‌های شناخته‌شده و ریسک‌های باقی‌مانده تأییدشده.
+- پیوند شواهد و خروجی ارزیاب‌ها.
+- تصمیم نهایی انتشار و تأییدهای لازم.
+- تاریخ تأیید و مسئولان.
+- برنامه پایش پس از انتشار و بازگشت نسخه.
+
+## ۱۱. قالب گزارش نهایی ارزیابی
+
+| فیلد | مقدار |
+|---|---|
+| محصول / نسخه انتشار | |
+| مشتری / پروژه | |
+| نوع محصول | RAG / Chatbot / Agent / Assistant / Automation / سایر |
+| محیط آزمون | |
+| مدل و نسخه | |
+| نسخه پرامپت/پیکربندی | |
+| نسخه ابزارها/APIها | |
+| نسخه دانش/نمایه | |
+| نسخه مجموعه‌داده‌های آزمون | |
+| بازه آزمون | |
+| تعداد کل موارد آزمون | |
+| تعداد قبول | |
+| تعداد مردود | |
+| تعداد مسدود | |
+| تعداد N/A و دلیل | |
+| تعداد اجرا‌نشده | |
+| امتیاز کیفیت وزنی | |
+| نقص‌های بحرانی باز | |
+| دروازه امنیت/حریم خصوصی | Pass / Fail / Blocked |
+| نتیجه SLO کارایی | Pass / Fail / N/A |
+| محدودیت‌ها / ریسک‌های باقی‌مانده | |
+| تصمیم نهایی | Pass / Conditional Pass / Fail / Release Blocked |
+| آزمون‌گر / بازبین | |
+| تأییدهای لازم | |
+| تاریخ تأیید | |
+| محل نگهداری شواهد | |
+| مسئول پایش پس از انتشار | |
+
+## ۱۲. منابع و مراجع
+
+منابع زیر مبنای تطبیق و توسعه این استاندارد هستند. هنگام پیاده‌سازی، آخرین نسخه استانداردها و مستندات محصول را بررسی کنید.
+
+۱. **ISTQB Certified Tester Foundation Level (CTFL) Syllabus** — اصول آزمون، فرایند آزمون، سطوح آزمون و آزمون پذیرش.  
+https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf
+
+۲. **ISO/IEC 25010:2023 — Product Quality Model** — ویژگی‌های کیفیت محصولات نرم‌افزاری و ICT.  
+https://www.iso.org/standard/78176.html
+
+۳. **OWASP Application Security Verification Standard (ASVS)** — الزامات راستی‌آزمایی امنیت برنامه.  
+https://asvs.owasp.org/
+
+۴. **OWASP Top 10 for LLM Applications** — ریسک‌های امنیتی اصلی برنامه‌های مبتنی بر مدل زبانی بزرگ.  
+https://genai.owasp.org/llm-top-10/
+
+۵. **NIST AI Risk Management Framework (AI RMF)** — راهنمای مدیریت ریسک هوش مصنوعی.  
+https://www.nist.gov/itl/ai-risk-management-framework
+
+۶. **NIST AI 600-1: Generative Artificial Intelligence Profile** — راهنمای مدیریت ریسک هوش مصنوعی مولد.  
+https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+
+۷. **Microsoft Foundry RAG Evaluators** — ارزیابی بازیابی و پاسخ تولیدشده در سامانه‌های RAG.  
+https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/rag-evaluators
+
+۸. **Microsoft Foundry Agent Evaluators** — ارزیابی وظایف Agent و استفاده از ابزارها.  
+https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators
+
+۹. **W3C Web Content Accessibility Guidelines (WCAG) 2.2** — معیارهای دسترس‌پذیری در صورت کاربرد.  
+https://www.w3.org/TR/WCAG22/
+
+### ۱۲.۱ نحوه استفاده از منابع
+
+- از ISTQB برای طراحی و اجرای آزمون، مدیریت نقص و آزمون پذیرش استفاده شود.
+- از ISO/IEC 25010 برای ساختاربندی ملاحظات کیفیت محصول استفاده شود.
+- از OWASP ASVS برای راستی‌آزمایی امنیت متعارف برنامه استفاده شود.
+- از OWASP Top 10 for LLM Applications برای شناسایی تهدیدهای ویژه هوش مصنوعی مولد استفاده شود.
+- از NIST AI RMF و Generative AI Profile برای ساختاربندی شناسایی، ارزیابی، کاهش و حاکمیت ریسک استفاده شود.
+- از ارزیاب‌های Microsoft Foundry RAG برای سنجش کیفیت مرتبط با RAG استفاده شود.
+- از ارزیاب‌های Microsoft Foundry Agent برای سنجش تکمیل وظیفه، استفاده از ابزار و رفتار Agent استفاده شود.
+- از WCAG در صورت شمول الزامات دسترس‌پذیری استفاده شود.
+
+**سلب مسئولیت:** این سند یک استاندارد داخلی پیشنهادی است و گواهی‌نامه، نظر حقوقی یا ادعای الزام بودن تمام آستانه‌ها در منابع مرجع نیست. آن را با نوع محصول، قرارداد مشتری، محیط قانونی و طبقه‌بندی ریسک تطبیق دهید.
